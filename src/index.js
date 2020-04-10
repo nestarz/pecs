@@ -35,9 +35,9 @@ const game = ({ FPS = 60 } = {}) => {
   });
 
   const renderSystem = world.createSystem("render");
-  world.linkSystem(renderSystem, positionComponent, { mutable: true });
+  world.linkSystem(renderSystem, positionComponent);
   world.linkSystem(renderSystem, shapeComponent);
-  world.linkSystem(renderSystem, rendererComponent);
+  world.linkSystem(renderSystem, rendererComponent, { mutable: true });
   world.querySystem(renderSystem, (results) => {
     results.forEach((entity, i) => {
       entity.renderer.context2d.fillStyle = entity.shape.color;
@@ -60,7 +60,10 @@ const game = ({ FPS = 60 } = {}) => {
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
     });
-    world.linkEntity(entity, velocityComponent, { x: Math.random() / 10, y: Math.random() / 10 });
+    world.linkEntity(entity, velocityComponent, {
+      x: Math.random() / 10,
+      y: Math.random() / 10,
+    });
     world.linkEntity(entity, shapeComponent, {
       color: "red",
       size: { x: 10, y: 10 },
@@ -71,15 +74,14 @@ const game = ({ FPS = 60 } = {}) => {
   }
 
   return {
-    start: () => {
+    start: () =>
       setTimeout(function update(lastTime = performance.now()) {
         const time = performance.now();
         canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
         world.execute(time - lastTime, time);
 
         setTimeout(() => update(time), 1000 / FPS);
-      }, 1000 / FPS);
-    },
+      }, 1000 / FPS),
   };
 };
 

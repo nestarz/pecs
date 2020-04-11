@@ -1,7 +1,7 @@
-import { safe, freeze } from "./safe.js";
+import { safe } from "./safe.js";
 
 const insert = (database, name, value) => {
-  database[name] = value;
+  database[name] = safe(value);
   return name;
 };
 
@@ -23,7 +23,7 @@ export const createWorld = () => {
     data,
     execute: (delta) => {
       if (typeof delta !== "number") throw "delta must be number";
-      Object.values(data.systems).forEach(({ fn }) => fn(delta));
+      Object.values(data.systems).forEach(({ query }) => query(delta));
     },
     createComponent: (name, value) => insert(data.components, name, value),
     createEntity: (name = Math.random()) =>
@@ -33,6 +33,7 @@ export const createWorld = () => {
     createSystem: (name) =>
       insert(data.systems, name, {
         components: {},
+        query: () => null,
       }),
     linkSystem: (systemId, componentId, { mutable = false } = {}) =>
       insert(data.systems[systemId].components, componentId, {
@@ -57,8 +58,8 @@ export const createWorld = () => {
     },
     querySystem: (name, fn) => {
       console.log(data.systems[name].components);
-      data.systems[name].fn = (delta) => {
-        const results = Object.values(data.entities)
+      const query = () =>
+        Object.values(data.entities)
           .filter((entity) =>
             Object.values(
               data.systems[name].components
@@ -75,12 +76,14 @@ export const createWorld = () => {
                 )
                 .map(([componentId, component]) =>
                   data.systems[name].components[componentId].mutable
-                    ? [componentId, safe(component)]
-                    : [componentId, freeze({ ...component })]
+                    ? [componentId, component]
+                    : [componentId, Object.freeze({ ...component })]
                 )
             )
           );
 
+      data.systems[name].query = (delta) => {
+        const results = query();
         if (results.length) {
           fn(results, delta);
         }

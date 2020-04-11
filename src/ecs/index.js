@@ -21,9 +21,9 @@ export const createWorld = () => {
 
   return {
     data: Object.freeze(data),
-    execute: (delta) => {
+    execute: (delta, time) => {
       if (typeof delta !== "number") throw "delta must be number";
-      Object.values(data.systems).forEach(({ query }) => query(delta));
+      Object.values(data.systems).forEach(({ query }) => query(delta, time));
     },
     createComponent: (name, value) => insert(data.components, name, value),
     createEntity: (name = Math.random()) =>
@@ -86,10 +86,10 @@ export const createWorld = () => {
             )
           );
 
-      data.systems[name].query = (delta) => {
+      data.systems[name].query = (delta, time) => {
         const results = query();
         if (results.length) {
-          fn(results, delta);
+          fn(results, delta, time);
         }
       };
     },

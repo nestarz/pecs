@@ -60,12 +60,26 @@ export const createWorld = () => {
       data.systems[name].fn = (delta) => {
         const results = Object.values(data.entities)
           .filter((entity) =>
-            Object.keys(
+            Object.values(
               data.systems[name].components
             ).every((systemComponent) =>
-              Object.keys(entity.components).includes(systemComponent)
+              Object.keys(entity.components).includes(systemComponent.id)
             )
-          ).map(entity => entity.components)
+          )
+          .map(({ components }) =>
+            Object.fromEntries(
+              Object.entries(components)
+                .filter(
+                  ([componentId, _]) =>
+                    componentId in data.systems[name].components
+                )
+                .map(([componentId, component]) =>
+                  data.systems[name].components[componentId].mutable
+                    ? [componentId, safe(component)]
+                    : [componentId, freeze({ ...component })]
+                )
+            )
+          );
 
         if (results.length) {
           fn(results, delta);

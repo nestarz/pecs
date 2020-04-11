@@ -30,6 +30,11 @@ export const createWorld = () => {
       insert(data.entities, name, {
         components: {},
       }),
+    removeEntity: (name) => {
+      if (!(name in data.entities))
+        throw Error(`removeEntity: no name ${name} found in entities`);
+      delete data.entities[name];
+    },
     createSystem: (name) =>
       insert(data.systems, name, {
         components: {},

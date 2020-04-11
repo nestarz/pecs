@@ -50,9 +50,11 @@ const game = ({ FPS = 60 } = {}) => {
     });
   });
 
-  const canvas = document.body.appendChild(document.createElement("canvas"));
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  const parent = document.querySelector("#app"); 
+  const canvas = parent.appendChild(document.createElement("canvas"));
+  canvas.width = parent.getBoundingClientRect().width;
+  canvas.height = parent.getBoundingClientRect().height;
+  Object.assign(canvas.style, { width: "100%", height: "100%" });
 
   for (let i = 0; i < 400; i++) {
     const entity = world.createEntity();
@@ -65,7 +67,7 @@ const game = ({ FPS = 60 } = {}) => {
       y: Math.random() / 10,
     });
     world.linkEntity(entity, shapeComponent, {
-      color: "red",
+      color: "black",
       size: { x: 10, y: 10 },
     });
     world.linkEntity(entity, rendererComponent, {

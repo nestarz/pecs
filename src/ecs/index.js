@@ -20,7 +20,7 @@ export const createWorld = () => {
   };
 
   return {
-    data,
+    data: Object.freeze(data),
     execute: (delta) => {
       if (typeof delta !== "number") throw "delta must be number";
       Object.values(data.systems).forEach(({ query }) => query(delta));

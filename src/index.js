@@ -1,6 +1,6 @@
 import { createWorld } from "./ecs/index.js";
 
-class InputSystem {
+class InputRecorder {
   constructor(DOMNode) {
     this.keydown = {};
     DOMNode.addEventListener("keyup", ({ code }) => {
@@ -31,7 +31,7 @@ const game = ({ FPS = 60 } = {}) => {
     context2d: CanvasRenderingContext2D,
   });
   const inputComponent = world.createComponent("input", {
-    system: InputSystem,
+    recorder: InputRecorder,
   });
   const enemyComponent = world.createComponent("enemy", {});
 
@@ -55,18 +55,29 @@ const game = ({ FPS = 60 } = {}) => {
   world.linkSystem(walkSystem, positionComponent, { mutable: true });
   world.linkSystem(walkSystem, velocityComponent);
   world.linkSystem(walkSystem, inputComponent);
+  world.linkSystem(walkSystem, shapeComponent);
   world.linkSystem(walkSystem, rendererComponent);
   world.querySystem(walkSystem, (results, delta) => {
-    results.forEach(({ renderer, position, velocity, input }) => {
-      const direction = {
-        x: input.system.keydown.KeyA ? -1 : input.system.keydown.KeyD ? 1 : 0,
-        y: input.system.keydown.KeyW ? -1 : input.system.keydown.KeyS ? 1 : 0,
-      };
-      position.x = Math.max(0, position.x + direction.x * velocity.x * delta);
-      position.x = Math.min(renderer.context2d.canvas.width, position.x);
-      position.y = Math.max(0, position.y + direction.y * velocity.y * delta);
-      position.y = Math.min(renderer.context2d.canvas.height, position.y);
-    });
+    results.forEach(
+      ({
+        renderer: { context2d },
+        position,
+        velocity,
+        shape: { size },
+        input: { recorder },
+      }) => {
+        const direction = {
+          x: recorder.keydown.KeyA ? -1 : recorder.keydown.KeyD ? 1 : 0,
+          y: recorder.keydown.KeyW ? -1 : recorder.keydown.KeyS ? 1 : 0,
+        };
+        position.x = position.x + direction.x * velocity.x * delta;
+        position.x = Math.max(0, position.x);
+        position.x = Math.min(context2d.canvas.width - size.x, position.x);
+        position.y = position.y + direction.y * velocity.y * delta;
+        position.y = Math.max(0, position.y);
+        position.y = Math.min(context2d.canvas.height - size.y, position.y);
+      }
+    );
   });
 
   const aiWalkSystem = world.createSystem("aiWalk");
@@ -111,11 +122,11 @@ const game = ({ FPS = 60 } = {}) => {
     context2d: canvas.getContext("2d"),
   });
   world.linkEntity(playerEntity, inputComponent, {
-    system: new InputSystem(canvas),
+    recorder: new InputRecorder(canvas),
   });
 
   for (let i = 0; i < 10; i++) {
-    const wolfEntity = world.createEntity("wolf"+i);
+    const wolfEntity = world.createEntity("wolf" + i);
     world.linkEntity(wolfEntity, positionComponent, {
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,

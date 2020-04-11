@@ -23,7 +23,7 @@ const game = ({ FPS = 60 } = {}) => {
     y: Number,
   });
   const shapeComponent = world.createComponent("shape", {
-    color: [String, Number],
+    color: String,
     size: Object,
   });
   const rendererComponent = world.createComponent("renderer", {
@@ -84,6 +84,7 @@ const game = ({ FPS = 60 } = {}) => {
     });
   }
 
+  console.log(world.data);
   return {
     start: () =>
       setTimeout(function update(lastTime = performance.now()) {

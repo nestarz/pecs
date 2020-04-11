@@ -73,6 +73,7 @@ const game = ({ FPS = 60 } = {}) => {
     });
   }
 
+  console.log(world.data);
   return {
     start: () =>
       setTimeout(function update(lastTime = performance.now()) {

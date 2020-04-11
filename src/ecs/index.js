@@ -57,7 +57,6 @@ export const createWorld = () => {
       );
     },
     querySystem: (name, fn) => {
-      console.log(data.systems[name].components);
       const query = () =>
         Object.values(data.entities)
           .filter((entity) =>

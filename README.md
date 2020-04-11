@@ -1,4 +1,4 @@
-# PECS, a small ECS attempt without class
+# PECS, a small ECS (Entity Component System) attempt without class
 
 ## Run
 

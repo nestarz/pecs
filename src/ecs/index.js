@@ -1,7 +1,16 @@
+import { safe, freeze } from "./safe.js";
+
 const insert = (database, name, value) => {
   database[name] = value;
   return name;
 };
+
+const sameStruct = (struct, value) =>
+  Object.entries(struct).every(([key, type]) =>
+    type instanceof Array
+      ? type.some((t) => Object(value[key]) instanceof t)
+      : Object(value[key]) instanceof type
+  ) && Object.keys(value).every((key) => typeof struct[key] !== "undefined");
 
 export const createWorld = () => {
   const data = {
@@ -13,23 +22,41 @@ export const createWorld = () => {
   return {
     data,
     execute: (delta) => {
-      if (typeof delta !== "number") throw('delta must be number');
+      if (typeof delta !== "number") throw "delta must be number";
       Object.values(data.systems).forEach(({ fn }) => fn(delta));
     },
     createComponent: (name, value) => insert(data.components, name, value),
-    createEntity: () =>
-      insert(data.entities, Math.random(), {
+    createEntity: (name = Math.random()) =>
+      insert(data.entities, name, {
         components: {},
       }),
     createSystem: (name) =>
       insert(data.systems, name, {
         components: {},
       }),
-    linkSystem: (systemId, componentId) =>
-      insert(data.systems[systemId].components, componentId),
-    linkEntity: (entityId, componentId, componentValue) =>
-      insert(data.entities[entityId].components, componentId, componentValue),
+    linkSystem: (systemId, componentId, { mutable = false } = {}) =>
+      insert(data.systems[systemId].components, componentId, {
+        id: componentId,
+        mutable,
+      }),
+    linkEntity: (entityId, componentId, componentValue) => {
+      if (!sameStruct(data.components[componentId], componentValue)) {
+        console.error(
+          componentValue,
+          `do not match struct`,
+          data.components[componentId]
+        );
+        throw Error("Unmatch struct");
+      }
+
+      insert(
+        data.entities[entityId].components,
+        componentId,
+        safe({ ...componentValue })
+      );
+    },
     querySystem: (name, fn) => {
+      console.log(data.systems[name].components);
       data.systems[name].fn = (delta) => {
         const results = Object.values(data.entities)
           .filter((entity) =>

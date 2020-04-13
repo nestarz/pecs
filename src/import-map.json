@@ -1,6 +1,7 @@
 {
   "imports": {
     "src/": "./",
+    "ecs": "../ecs/index.js",
     "components/": "./components/",
     "systems/": "./systems/",
     "assets/": "../assets/",
